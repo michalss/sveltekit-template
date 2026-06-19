@@ -7,7 +7,8 @@
 		List,
 		ListOrdered,
 		Code,
-		Quote
+		Quote,
+		Image as ImageIcon
 	} from '@lucide/svelte';
 
 	export interface MarkdownAction {
@@ -23,9 +24,11 @@
 
 	interface Props {
 		onaction: (action: MarkdownAction) => void;
+		/** Called when the image button is clicked (omit to hide the button). */
+		onimage?: () => void;
 	}
 
-	let { onaction }: Props = $props();
+	let { onaction, onimage }: Props = $props();
 
 	const buttons: { icon: typeof Bold; label: string; action: MarkdownAction }[] = [
 		{ icon: Bold, label: 'Bold', action: { before: '**', after: '**', placeholder: 'bold' } },
@@ -78,4 +81,17 @@
 			<Icon class="h-4 w-4" />
 		</button>
 	{/each}
+
+	{#if onimage}
+		<span class="mx-1 h-5 w-px bg-gray-300 dark:bg-gray-700"></span>
+		<button
+			type="button"
+			title="Insert image"
+			aria-label="Insert image"
+			class="rounded p-1.5 text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+			onclick={onimage}
+		>
+			<ImageIcon class="h-4 w-4" />
+		</button>
+	{/if}
 </div>

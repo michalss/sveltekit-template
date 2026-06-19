@@ -12,6 +12,10 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# User uploads (keep the folder, ignore its contents)
+/static/uploads/*
+!/static/uploads/.gitkeep
+
 # Env
 .env
 .env.*

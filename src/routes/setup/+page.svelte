@@ -199,6 +199,12 @@ import { MarkdownEditor } from '$lib/components/markdown';
 			<h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
 				Markdown editor component
 			</h2>
+			<p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
+				Supports the toolbar, paste &amp; drag-and-drop images.
+				{#if !data.user}
+					Image upload requires being <a href="/login" class="text-blue-600 hover:underline dark:text-blue-400">signed in</a>.
+				{/if}
+			</p>
 			<MarkdownEditor bind:value={editorValue} rows={14} />
 		</section>
 	</main>

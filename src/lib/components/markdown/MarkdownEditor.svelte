@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Eye, Pencil, Columns2 } from '@lucide/svelte';
+	import { Eye, Pencil, Columns2, LoaderCircle } from '@lucide/svelte';
 	import MarkdownToolbar, { type MarkdownAction } from './MarkdownToolbar.svelte';
 	import MarkdownRenderer from './MarkdownRenderer.svelte';
+	import { uploadImage } from '$lib/upload';
 
 	type ViewMode = 'write' | 'preview' | 'split';
 
@@ -12,6 +13,8 @@
 		rows?: number;
 		/** Initial view mode. */
 		mode?: ViewMode;
+		/** Enable image upload via button, paste and drag & drop. */
+		allowImageUpload?: boolean;
 		class?: string;
 	}
 
@@ -20,10 +23,15 @@
 		placeholder = 'Write some Markdown…',
 		rows = 12,
 		mode = $bindable<ViewMode>('split'),
+		allowImageUpload = true,
 		class: className = ''
 	}: Props = $props();
 
 	let textarea = $state<HTMLTextAreaElement>();
+	let fileInput = $state<HTMLInputElement>();
+	let uploading = $state(0);
+	let dragOver = $state(false);
+	let uploadError = $state('');
 
 	const modes: { value: ViewMode; label: string; icon: typeof Eye }[] = [
 		{ value: 'write', label: 'Write', icon: Pencil },
@@ -65,6 +73,75 @@
 			el.setSelectionRange(caretStart, caretEnd);
 		});
 	}
+
+	/** Inserts text at the current caret position (or appends if no textarea). */
+	function insertAtCursor(text: string) {
+		const el = textarea;
+		if (!el) {
+			value += text;
+			return;
+		}
+		const start = el.selectionStart;
+		const end = el.selectionEnd;
+		value = value.slice(0, start) + text + value.slice(end);
+		const caret = start + text.length;
+		requestAnimationFrame(() => {
+			el.focus();
+			el.setSelectionRange(caret, caret);
+		});
+	}
+
+	/** Uploads one image file and inserts a Markdown image at the cursor. */
+	async function handleImageFile(file: File) {
+		if (!file.type.startsWith('image/')) return;
+		uploadError = '';
+		uploading += 1;
+		// Insert a placeholder so the user sees progress, then swap in the URL.
+		const placeholderText = `![uploading ${file.name}…]()`;
+		insertAtCursor(placeholderText);
+		try {
+			const url = await uploadImage(file);
+			value = value.replace(placeholderText, `![${file.name}](${url})`);
+		} catch (e) {
+			value = value.replace(placeholderText, '');
+			uploadError = e instanceof Error ? e.message : 'Upload failed';
+		} finally {
+			uploading -= 1;
+		}
+	}
+
+	async function handleFiles(files: FileList | File[] | null | undefined) {
+		if (!files) return;
+		for (const file of Array.from(files)) {
+			if (file.type.startsWith('image/')) await handleImageFile(file);
+		}
+	}
+
+	function openFilePicker() {
+		fileInput?.click();
+	}
+
+	function onPaste(event: ClipboardEvent) {
+		if (!allowImageUpload) return;
+		const images = Array.from(event.clipboardData?.items ?? [])
+			.filter((item) => item.type.startsWith('image/'))
+			.map((item) => item.getAsFile())
+			.filter((f): f is File => f !== null);
+		if (images.length) {
+			event.preventDefault();
+			handleFiles(images);
+		}
+	}
+
+	function onDrop(event: DragEvent) {
+		if (!allowImageUpload) return;
+		const files = event.dataTransfer?.files;
+		if (files && files.length) {
+			event.preventDefault();
+			dragOver = false;
+			handleFiles(files);
+		}
+	}
 </script>
 
 <div
@@ -76,8 +153,13 @@
 	<div
 		class="flex items-center justify-between border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900"
 	>
-		<MarkdownToolbar onaction={applyAction} />
+		<MarkdownToolbar onaction={applyAction} onimage={allowImageUpload ? openFilePicker : undefined} />
 		<div class="flex items-center gap-0.5 px-2">
+			{#if uploading > 0}
+				<span class="flex items-center gap-1 px-1 text-xs text-gray-500 dark:text-gray-400">
+					<LoaderCircle class="h-3.5 w-3.5 animate-spin" /> Uploading…
+				</span>
+			{/if}
 			{#each modes as m (m.value)}
 				{@const Icon = m.icon}
 				<button
@@ -100,16 +182,43 @@
 		</div>
 	</div>
 
+	{#if uploadError}
+		<p class="border-b border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+			{uploadError}
+		</p>
+	{/if}
+
 	<div class="grid" class:grid-cols-2={mode === 'split'}>
 		{#if mode !== 'preview'}
-			<textarea
-				bind:this={textarea}
-				bind:value
-				{rows}
-				{placeholder}
-				spellcheck="false"
-				class="w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-gray-900 focus:outline-none focus:ring-0 dark:text-gray-100"
-			></textarea>
+			<div
+				class="relative"
+				role="presentation"
+				ondragover={(e) => {
+					if (allowImageUpload) {
+						e.preventDefault();
+						dragOver = true;
+					}
+				}}
+				ondragleave={() => (dragOver = false)}
+				ondrop={onDrop}
+			>
+				<textarea
+					bind:this={textarea}
+					bind:value
+					{rows}
+					{placeholder}
+					spellcheck="false"
+					onpaste={onPaste}
+					class="h-full w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-gray-900 focus:outline-none focus:ring-0 dark:text-gray-100"
+				></textarea>
+				{#if dragOver}
+					<div
+						class="pointer-events-none absolute inset-2 flex items-center justify-center rounded-lg border-2 border-dashed border-blue-400 bg-blue-50/80 text-sm font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+					>
+						Drop image to upload
+					</div>
+				{/if}
+			</div>
 		{/if}
 		{#if mode !== 'write'}
 			<div
@@ -126,4 +235,18 @@
 			</div>
 		{/if}
 	</div>
+
+	{#if allowImageUpload}
+		<input
+			bind:this={fileInput}
+			type="file"
+			accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+			multiple
+			class="hidden"
+			onchange={(e) => {
+				handleFiles(e.currentTarget.files);
+				e.currentTarget.value = '';
+			}}
+		/>
+	{/if}
 </div>

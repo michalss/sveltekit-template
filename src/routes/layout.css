@@ -13,3 +13,19 @@ html.dark {
 	@apply bg-gray-950 text-gray-100;
 	color-scheme: dark;
 }
+
+/* Tighter spacing for rendered Markdown (the default prose margins are large). */
+.prose :where(h1, h2, h3, h4):not(:first-child) {
+	margin-top: 1em;
+}
+.prose :where(h1, h2, h3, h4) {
+	margin-bottom: 0.5em;
+}
+.prose :where(p, ul, ol, blockquote, pre) {
+	margin-top: 0.6em;
+	margin-bottom: 0.6em;
+}
+.prose :where(li) {
+	margin-top: 0.15em;
+	margin-bottom: 0.15em;
+}
