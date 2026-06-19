@@ -6,6 +6,18 @@ import { magicLink } from 'better-auth/plugins';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import { sendMagicLinkEmail } from '$lib/server/email';
+import { isProduction } from '$lib/server/env';
+
+/** Origins allowed to start auth flows / receive cookies. */
+function trustedOrigins(): string[] {
+	const origins = new Set<string>();
+	if (env.ORIGIN) origins.add(env.ORIGIN);
+	for (const extra of (env.TRUSTED_ORIGINS ?? '').split(',')) {
+		const trimmed = extra.trim();
+		if (trimmed) origins.add(trimmed);
+	}
+	return [...origins];
+}
 
 /**
  * Better Auth instance.
@@ -45,8 +57,35 @@ export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'mysql' }),
-	emailAndPassword: { enabled: true },
+	trustedOrigins: trustedOrigins(),
+	emailAndPassword: {
+		enabled: true,
+		// Enforce a reasonable password policy server-side.
+		minPasswordLength: 8,
+		maxPasswordLength: 128,
+		requireEmailVerification: false
+	},
 	socialProviders: socialProviders(),
+	// Harden session cookies. Secure + httpOnly + sameSite=lax by default.
+	advanced: {
+		useSecureCookies: isProduction,
+		defaultCookieAttributes: {
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: isProduction
+		}
+	},
+	session: {
+		expiresIn: 60 * 60 * 24 * 7, // 7 days
+		updateAge: 60 * 60 * 24, // refresh once per day
+		cookieCache: { enabled: true, maxAge: 5 * 60 }
+	},
+	rateLimit: {
+		// Better Auth's own per-endpoint limiter (defense in depth alongside ours).
+		enabled: true,
+		window: 60,
+		max: 100
+	},
 	plugins: [
 		magicLink({
 			sendMagicLink: async ({ email, url }) => {

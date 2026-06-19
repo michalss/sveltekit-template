@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { isProduction } from '$lib/server/env';
 
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
@@ -10,12 +11,18 @@ export interface TurnstileResult {
 /**
  * Verifies a Cloudflare Turnstile token server-side.
  *
- * If TURNSTILE_SECRET_KEY is not set, verification is skipped (returns success)
- * so the template works out of the box during local development.
+ * Behaviour when TURNSTILE_SECRET_KEY is unset:
+ *  - development: verification is skipped (returns success) for convenience.
+ *  - production: fails CLOSED, so captcha can never be silently bypassed in a
+ *    real deployment where the key was forgotten.
  */
 export async function verifyTurnstile(token: string | null, remoteIp?: string): Promise<TurnstileResult> {
 	const secret = env.TURNSTILE_SECRET_KEY;
 	if (!secret) {
+		if (isProduction) {
+			console.error('TURNSTILE_SECRET_KEY is not set in production — rejecting request.');
+			return { success: false, errorCodes: ['missing-secret'] };
+		}
 		return { success: true };
 	}
 

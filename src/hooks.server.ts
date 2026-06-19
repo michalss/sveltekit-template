@@ -1,18 +1,44 @@
 import { sequence } from '@sveltejs/kit/hooks';
 import { building } from '$app/environment';
+import { error, type Handle } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
-import type { Handle } from '@sveltejs/kit';
 import { getTextDirection } from '$lib/paraglide/runtime';
 import { paraglideMiddleware } from '$lib/paraglide/server';
+import { handleSecurityHeaders } from '$lib/server/security-headers';
+import { rateLimit, retryAfterSeconds } from '$lib/server/rate-limit';
+import '$lib/server/env'; // validate env on startup
 
-const handleParaglide: Handle = ({ event, resolve }) => paraglideMiddleware(event.request, ({ request, locale }) => {
-	event.request = request;
+const handleParaglide: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request, locale }) => {
+		event.request = request;
 
-	return resolve(event, {
-		transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale).replace('%paraglide.dir%', getTextDirection(locale))
+		return resolve(event, {
+			transformPageChunk: ({ html }) =>
+				html.replace('%paraglide.lang%', locale).replace('%paraglide.dir%', getTextDirection(locale))
+		});
 	});
-});
+
+/**
+ * Rate-limits the sensitive auth endpoints by client IP. Better Auth also has
+ * its own limiter (defense in depth); this guards the surface early and cheaply.
+ */
+const handleRateLimit: Handle = async ({ event, resolve }) => {
+	const path = event.url.pathname;
+	const isAuthPost = event.request.method === 'POST' && path.startsWith('/api/auth');
+	const isFormPost =
+		event.request.method === 'POST' && (path.endsWith('/login') || path.endsWith('/signup'));
+
+	if (isAuthPost || isFormPost) {
+		const ip = event.getClientAddress();
+		const result = rateLimit({ key: `auth:${ip}`, limit: 10, windowMs: 60_000 });
+		if (!result.success) {
+			throw error(429, `Too many attempts. Try again in ${retryAfterSeconds(result.resetAt)}s.`);
+		}
+	}
+
+	return resolve(event);
+};
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({ headers: event.request.headers });
@@ -25,4 +51,9 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	return svelteKitHandler({ event, resolve, auth, building });
 };
 
-export const handle: Handle = sequence(handleParaglide, handleBetterAuth);
+export const handle: Handle = sequence(
+	handleSecurityHeaders,
+	handleParaglide,
+	handleRateLimit,
+	handleBetterAuth
+);
