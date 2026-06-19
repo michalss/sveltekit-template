@@ -1,3 +1,7 @@
+> **Read [`LLM.md`](./LLM.md) first.** It is the canonical guide to this project's
+> architecture, conventions, and the right way to extend each subsystem (auth, AI,
+> i18n, markdown, security). Follow it.
+
 You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
 
 ## Available Svelte MCP Tools:
