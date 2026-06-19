@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Eye, Pencil, Columns2, LoaderCircle } from '@lucide/svelte';
+	import { Eye, Pencil, Columns2, LoaderCircle, Maximize2, Minimize2 } from '@lucide/svelte';
 	import MarkdownToolbar, { type MarkdownAction } from './MarkdownToolbar.svelte';
 	import MarkdownRenderer from './MarkdownRenderer.svelte';
 	import { uploadImage } from '$lib/upload';
@@ -32,6 +32,11 @@
 	let uploading = $state(0);
 	let dragOver = $state(false);
 	let uploadError = $state('');
+	let fullscreen = $state(false);
+
+	// Live word / character counts.
+	const charCount = $derived(value.length);
+	const wordCount = $derived(value.trim() ? value.trim().split(/\s+/).length : 0);
 
 	const modes: { value: ViewMode; label: string; icon: typeof Eye }[] = [
 		{ value: 'write', label: 'Write', icon: Pencil },
@@ -142,11 +147,79 @@
 			handleFiles(files);
 		}
 	}
+
+	/** Keyboard shortcuts: Ctrl/Cmd+B/I/K, Tab indent, list auto-continue, Esc exits fullscreen. */
+	function onKeydown(event: KeyboardEvent) {
+		const el = textarea;
+		if (!el) return;
+		const mod = event.ctrlKey || event.metaKey;
+
+		if (mod && event.key.toLowerCase() === 'b') {
+			event.preventDefault();
+			applyAction({ before: '**', after: '**', placeholder: 'bold' });
+			return;
+		}
+		if (mod && event.key.toLowerCase() === 'i') {
+			event.preventDefault();
+			applyAction({ before: '_', after: '_', placeholder: 'italic' });
+			return;
+		}
+		if (mod && event.key.toLowerCase() === 'k') {
+			event.preventDefault();
+			applyAction({ before: '[', after: '](https://)', placeholder: 'text' });
+			return;
+		}
+
+		if (event.key === 'Tab') {
+			// Indent / outdent with two spaces instead of leaving the field.
+			event.preventDefault();
+			const start = el.selectionStart;
+			if (event.shiftKey) {
+				const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+				if (value.slice(lineStart, lineStart + 2) === '  ') {
+					value = value.slice(0, lineStart) + value.slice(lineStart + 2);
+					queueCaret(start - 2);
+				}
+			} else {
+				insertAtCursor('  ');
+			}
+			return;
+		}
+
+		if (event.key === 'Enter') {
+			// Continue an unordered or ordered list automatically.
+			const start = el.selectionStart;
+			const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+			const line = value.slice(lineStart, start);
+			const bullet = line.match(/^(\s*)([-*+]) /);
+			const ordered = line.match(/^(\s*)(\d+)\. /);
+			if (bullet) {
+				event.preventDefault();
+				insertAtCursor(`\n${bullet[1]}${bullet[2]} `);
+			} else if (ordered) {
+				event.preventDefault();
+				insertAtCursor(`\n${ordered[1]}${Number(ordered[2]) + 1}. `);
+			}
+			return;
+		}
+
+		if (event.key === 'Escape' && fullscreen) {
+			fullscreen = false;
+		}
+	}
+
+	function queueCaret(pos: number) {
+		requestAnimationFrame(() => {
+			textarea?.focus();
+			textarea?.setSelectionRange(pos, pos);
+		});
+	}
 </script>
 
 <div
 	class={[
-		'overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950',
+		'flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950',
+		fullscreen ? 'fixed inset-0 z-50 rounded-none' : '',
 		className
 	]}
 >
@@ -179,6 +252,19 @@
 					<span class="hidden sm:inline">{m.label}</span>
 				</button>
 			{/each}
+			<button
+				type="button"
+				title={fullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen'}
+				aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+				class="ml-1 rounded p-1.5 text-gray-500 transition hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+				onclick={() => (fullscreen = !fullscreen)}
+			>
+				{#if fullscreen}
+					<Minimize2 class="h-3.5 w-3.5" />
+				{:else}
+					<Maximize2 class="h-3.5 w-3.5" />
+				{/if}
+			</button>
 		</div>
 	</div>
 
@@ -188,7 +274,7 @@
 		</p>
 	{/if}
 
-	<div class="grid" class:grid-cols-2={mode === 'split'}>
+	<div class={['grid min-h-0 flex-1', mode === 'split' && 'grid-cols-2']}>
 		{#if mode !== 'preview'}
 			<div
 				class="relative"
@@ -205,11 +291,15 @@
 				<textarea
 					bind:this={textarea}
 					bind:value
-					{rows}
+					rows={fullscreen ? undefined : rows}
 					{placeholder}
 					spellcheck="false"
 					onpaste={onPaste}
-					class="h-full w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-gray-900 focus:outline-none focus:ring-0 dark:text-gray-100"
+					onkeydown={onKeydown}
+					class={[
+						'w-full border-0 bg-transparent p-4 font-mono text-sm text-gray-900 focus:outline-none focus:ring-0 dark:text-gray-100',
+						fullscreen ? 'h-full resize-none' : 'h-full resize-y'
+					]}
 				></textarea>
 				{#if dragOver}
 					<div
@@ -234,6 +324,13 @@
 				{/if}
 			</div>
 		{/if}
+	</div>
+
+	<div
+		class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-1.5 text-xs text-gray-400 dark:border-gray-800 dark:bg-gray-900"
+	>
+		<span>Markdown supported · drag, paste or upload images</span>
+		<span>{wordCount} words · {charCount} chars</span>
 	</div>
 
 	{#if allowImageUpload}

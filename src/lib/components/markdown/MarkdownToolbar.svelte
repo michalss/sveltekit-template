@@ -2,12 +2,15 @@
 	import {
 		Bold,
 		Italic,
+		Strikethrough,
 		Heading,
 		Link,
 		List,
 		ListOrdered,
 		Code,
 		Quote,
+		Table,
+		Minus,
 		Image as ImageIcon
 	} from '@lucide/svelte';
 
@@ -30,9 +33,14 @@
 
 	let { onaction, onimage }: Props = $props();
 
-	const buttons: { icon: typeof Bold; label: string; action: MarkdownAction }[] = [
-		{ icon: Bold, label: 'Bold', action: { before: '**', after: '**', placeholder: 'bold' } },
-		{ icon: Italic, label: 'Italic', action: { before: '_', after: '_', placeholder: 'italic' } },
+	const buttons: { icon: typeof Bold; label: string; title?: string; action: MarkdownAction }[] = [
+		{ icon: Bold, label: 'Bold', title: 'Bold (Ctrl+B)', action: { before: '**', after: '**', placeholder: 'bold' } },
+		{ icon: Italic, label: 'Italic', title: 'Italic (Ctrl+I)', action: { before: '_', after: '_', placeholder: 'italic' } },
+		{
+			icon: Strikethrough,
+			label: 'Strikethrough',
+			action: { before: '~~', after: '~~', placeholder: 'text' }
+		},
 		{
 			icon: Heading,
 			label: 'Heading',
@@ -41,6 +49,7 @@
 		{
 			icon: Link,
 			label: 'Link',
+			title: 'Link (Ctrl+K)',
 			action: { before: '[', after: '](https://)', placeholder: 'text' }
 		},
 		{
@@ -62,6 +71,19 @@
 			icon: ListOrdered,
 			label: 'Numbered list',
 			action: { before: '1. ', placeholder: 'item', linePrefix: true }
+		},
+		{
+			icon: Table,
+			label: 'Table',
+			action: {
+				before: '\n| Column | Column |\n| --- | --- |\n| Cell | Cell |\n',
+				placeholder: ''
+			}
+		},
+		{
+			icon: Minus,
+			label: 'Horizontal rule',
+			action: { before: '\n---\n', placeholder: '' }
 		}
 	];
 </script>
@@ -73,7 +95,7 @@
 		{@const Icon = button.icon}
 		<button
 			type="button"
-			title={button.label}
+			title={button.title ?? button.label}
 			aria-label={button.label}
 			class="rounded p-1.5 text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
 			onclick={() => onaction(button.action)}

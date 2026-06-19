@@ -70,14 +70,35 @@
 	let editorValue = $state(
 		`# Markdown editor demo
 
-This editor is a **reusable component** (\`MarkdownEditor\`) built with Svelte 5 runes.
+A **reusable** \`MarkdownEditor\` (Svelte 5 runes). Try the toolbar, **Ctrl+B/I/K**, Tab indent, and fullscreen.
 
-- Type on the left, see the **live preview** on the right
-- Use the toolbar for *formatting*
-- Switch between Write / Split / Preview
+## Syntax highlighting (Shiki)
 
 \`\`\`ts
 import { MarkdownEditor } from '$lib/components/markdown';
+
+const greet = (name: string) => \`Hello, \${name}!\`;
+\`\`\`
+
+## GitHub-flavored Markdown
+
+| Feature | Status |
+| --- | --- |
+| Tables | ✅ |
+| Task lists | ✅ |
+| Strikethrough | ~~old~~ ✅ |
+
+- [x] Code highlighting
+- [x] Mermaid diagrams
+- [ ] Your next feature
+
+## Diagrams (Mermaid)
+
+\`\`\`mermaid
+flowchart LR
+  A[Write] --> B{Split}
+  B --> C[Preview]
+  B --> D[Fullscreen]
 \`\`\`
 
 > Output is sanitized with DOMPurify before rendering.`
