@@ -18,6 +18,9 @@ class ThemeStore {
 	/** The user's chosen preference. */
 	preference = $state<Theme>(readStored());
 
+	/** True once running in the browser — used to avoid SSR/hydration mismatch. */
+	mounted = $state(false);
+
 	/** The effective theme actually applied to the document. */
 	resolved = $derived<'light' | 'dark'>(
 		this.preference === 'system' ? (systemPrefersDark() ? 'dark' : 'light') : this.preference
@@ -25,6 +28,9 @@ class ThemeStore {
 
 	constructor() {
 		if (!browser) return;
+		// The anti-FOUC script in app.html already set <html>.dark before paint;
+		// adopt that so the first client render matches the document immediately.
+		this.mounted = true;
 
 		// Keep <html>.dark and storage in sync with the preference.
 		$effect.root(() => {

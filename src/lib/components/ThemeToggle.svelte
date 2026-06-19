@@ -3,18 +3,24 @@
 	import { Dropdown, DropdownItem } from '$lib/components/ui';
 	import { theme, type Theme } from '$lib/theme.svelte';
 
-	const options: { value: Theme; label: string; icon: typeof Sun }[] = [
+	const options = [
 		{ value: 'light', label: 'Light', icon: Sun },
 		{ value: 'dark', label: 'Dark', icon: Moon },
 		{ value: 'system', label: 'System', icon: Monitor }
-	];
+	] satisfies { value: Theme; label: string; icon: typeof Sun }[];
 
+	// Show the actually-applied theme (sun/moon) once mounted.
 	const TriggerIcon = $derived(theme.resolved === 'dark' ? Moon : Sun);
 </script>
 
 <Dropdown label="Change theme" showChevron={false}>
 	{#snippet trigger()}
-		<TriggerIcon class="h-4 w-4" />
+		{#if theme.mounted}
+			<TriggerIcon class="h-5 w-5" />
+		{:else}
+			<!-- Reserve space before hydration to avoid an icon flash on refresh. -->
+			<span class="h-5 w-5"></span>
+		{/if}
 	{/snippet}
 
 	{#snippet children(close)}

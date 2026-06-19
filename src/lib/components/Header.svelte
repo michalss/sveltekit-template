@@ -24,6 +24,12 @@
 		<a href="/" class="font-semibold text-gray-900 dark:text-gray-100">{m.app_name()}</a>
 
 		<nav class="flex items-center gap-2">
+			<a
+				href="/setup"
+				class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+			>
+				Setup
+			</a>
 			<ThemeToggle />
 			<LangSwitch />
 			{#if user}

@@ -40,6 +40,8 @@
 	"dependencies": {
 		"@google/generative-ai": "^0.24.1",
 		"@lucide/svelte": "^1.21.0",
+		"isomorphic-dompurify": "^3.18.0",
+		"marked": "^18.0.5",
 		"openai": "^6.44.0",
 		"zod": "^4.4.3"
 	}
