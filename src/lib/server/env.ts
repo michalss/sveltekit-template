@@ -1,5 +1,4 @@
 import { env } from '$env/dynamic/private';
-import { building } from '$app/environment';
 
 /**
  * Validates required environment variables once at startup so the app fails
@@ -8,6 +7,10 @@ import { building } from '$app/environment';
  * Optional integrations (OAuth, AI, Turnstile) are intentionally NOT required —
  * they degrade gracefully when unset. But anything the app cannot run without
  * is checked here.
+ *
+ * Validation is skipped when SKIP_ENV_VALIDATION is set, which is used by tools
+ * that load this module outside the running server (e.g. the Better Auth CLI
+ * generating the Drizzle schema).
  */
 
 const REQUIRED = ['DATABASE_URL', 'BETTER_AUTH_SECRET', 'ORIGIN'] as const;
@@ -38,8 +41,21 @@ function validate() {
 	}
 }
 
-// Skip during `vite build`, where private env may be intentionally absent.
-if (!building) {
+let validated = false;
+
+/**
+ * Runs validation once, synchronously, so a failure aborts the request (and
+ * surfaces immediately) rather than becoming a swallowed promise rejection.
+ *
+ * The caller passes `building` (from `$app/environment`) so this module has no
+ * static dependency on SvelteKit internals — that keeps it loadable by the
+ * Better Auth CLI, which sets SKIP_ENV_VALIDATION to opt out entirely.
+ *
+ * @param building true during `vite build` / prerender — validation is skipped.
+ */
+export function validateEnv(building = false): void {
+	if (validated || building || env.SKIP_ENV_VALIDATION) return;
+	validated = true;
 	validate();
 }
 

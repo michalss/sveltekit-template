@@ -7,7 +7,13 @@ import { getTextDirection } from '$lib/paraglide/runtime';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 import { handleSecurityHeaders } from '$lib/server/security-headers';
 import { rateLimit, retryAfterSeconds } from '$lib/server/rate-limit';
-import '$lib/server/env'; // validate env on startup
+import { validateEnv } from '$lib/server/env';
+
+// Validate required env on the first request (skipped during build/prerender).
+const handleEnv: Handle = ({ event, resolve }) => {
+	validateEnv(building);
+	return resolve(event);
+};
 
 const handleParaglide: Handle = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request, locale }) => {
@@ -23,11 +29,13 @@ const handleParaglide: Handle = ({ event, resolve }) =>
  * Rate-limits the sensitive auth endpoints by client IP. Better Auth also has
  * its own limiter (defense in depth); this guards the surface early and cheaply.
  */
+const SENSITIVE_FORMS = ['/login', '/signup', '/forgot-password', '/reset-password'];
+
 const handleRateLimit: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
 	const isAuthPost = event.request.method === 'POST' && path.startsWith('/api/auth');
 	const isFormPost =
-		event.request.method === 'POST' && (path.endsWith('/login') || path.endsWith('/signup'));
+		event.request.method === 'POST' && SENSITIVE_FORMS.some((p) => path.endsWith(p));
 
 	if (isAuthPost || isFormPost) {
 		const ip = event.getClientAddress();
@@ -52,6 +60,7 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 };
 
 export const handle: Handle = sequence(
+	handleEnv,
 	handleSecurityHeaders,
 	handleParaglide,
 	handleRateLimit,

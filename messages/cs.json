@@ -27,5 +27,18 @@
 	"dashboard_welcome": "Vítejte, {name}!",
 	"dashboard_subtitle": "Jste přihlášeni.",
 	"error_generic": "Něco se pokazilo. Zkuste to prosím znovu.",
-	"error_captcha": "Ověření captcha selhalo. Zkuste to prosím znovu."
+	"error_captcha": "Ověření captcha selhalo. Zkuste to prosím znovu.",
+	"nav_admin": "Administrace",
+	"forgot_password": "Zapomněli jste heslo?",
+	"forgot_title": "Obnovení hesla",
+	"forgot_subtitle": "Zadejte svůj e-mail a pošleme vám odkaz pro obnovení.",
+	"forgot_submit": "Odeslat odkaz",
+	"forgot_sent": "Pokud tento e-mail existuje, poslali jsme odkaz pro obnovení.",
+	"reset_title": "Zvolte nové heslo",
+	"reset_subtitle": "Zadejte a potvrďte své nové heslo.",
+	"reset_submit": "Změnit heslo",
+	"field_password_confirm": "Potvrzení hesla",
+	"error_password_short": "Heslo musí mít alespoň 8 znaků.",
+	"error_password_match": "Hesla se neshodují.",
+	"error_reset_token": "Tento odkaz pro obnovení je neplatný nebo vypršel."
 }

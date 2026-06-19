@@ -74,13 +74,21 @@
 			</Button>
 		</form>
 
-		<button
-			type="button"
-			class="text-sm text-blue-600 hover:underline dark:text-blue-400"
-			onclick={() => (mode = mode === 'password' ? 'magic' : 'password')}
-		>
-			{mode === 'password' ? m.use_magic_link() : m.use_password()}
-		</button>
+		<div class="flex items-center justify-between">
+			<button
+				type="button"
+				class="text-sm text-blue-600 hover:underline dark:text-blue-400"
+				onclick={() => (mode = mode === 'password' ? 'magic' : 'password')}
+			>
+				{mode === 'password' ? m.use_magic_link() : m.use_password()}
+			</button>
+			<a
+				href="/forgot-password"
+				class="text-sm text-gray-500 hover:underline dark:text-gray-400"
+			>
+				{m.forgot_password()}
+			</a>
+		</div>
 	{/if}
 
 	<p class="text-center text-sm text-gray-500 dark:text-gray-400">

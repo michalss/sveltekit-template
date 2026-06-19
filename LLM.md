@@ -28,7 +28,8 @@ extend each subsystem.
 | ---------- | ------------------------------------------------------------ |
 | Framework  | SvelteKit 2, Svelte 5 (runes), `adapter-node`                |
 | Styling    | Tailwind v4 (`@tailwindcss/forms`, `typography`), dark mode  |
-| Auth       | Better Auth (email+password, magic link, Google, Microsoft)  |
+| Auth       | Better Auth (email+password, magic link, Google, Microsoft, admin/roles, email verify, password reset) |
+| Email      | Pluggable: Resend / SMTP / console (EMAIL_PROVIDER)          |
 | Database   | Drizzle ORM on MariaDB/MySQL (`mysql2`)                       |
 | AI         | OpenAI, Gemini, DeepSeek behind one `AiProvider` interface    |
 | i18n       | Paraglide (`en`, `cs`)                                       |
@@ -102,6 +103,17 @@ src/
   (or `db:generate` + `db:migrate`). Auth tables live in the generated
   `auth.schema.ts` — don't hand-edit; regenerate with `auth:schema`.
 - **New protected page**: place it under `(app)/`; the layout guard handles auth.
+- **Admin-only page/action**: place under `(app)/admin/` (layout guard requires
+  admin) AND call `requireAdmin(event)` inside every action — never rely on the
+  load guard alone. Use `requireUser`/`requireAdmin`/`isAdmin` from
+  `$lib/server/authorize` (they also reject banned users). Protect the last-admin
+  invariant when changing roles/bans.
+- **Roles**: Better Auth `admin` plugin. Seed admins via `ADMIN_USER_IDS` env, or
+  promote via the `/admin/users` page. After plugin changes: `auth:schema` +
+  `db:push`.
+- **Email**: use the templated helpers in `$lib/server/email`
+  (`sendVerificationEmail`, `sendPasswordResetEmail`, `sendMagicLinkEmail`).
+  Transport is chosen by `EMAIL_PROVIDER` (resend/smtp/console).
 - **Markdown**: use `<MarkdownEditor bind:value>` for editing and
   `<MarkdownRenderer source={...}>` for display. Both sanitize output. Code
   blocks get Shiki highlighting; ```mermaid fences render as diagrams.

@@ -9,6 +9,7 @@
 
 	let { user }: { user?: User } = $props();
 
+	const isAdmin = $derived((user as { role?: string } | undefined)?.role === 'admin');
 	let signingOut = $state(false);
 
 	async function logout() {
@@ -39,6 +40,14 @@
 				>
 					{m.nav_dashboard()}
 				</a>
+				{#if isAdmin}
+					<a
+						href="/admin/users"
+						class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+					>
+						{m.nav_admin()}
+					</a>
+				{/if}
 				<Button size="sm" variant="ghost" loading={signingOut} onclick={logout}>
 					{m.nav_logout()}
 				</Button>

@@ -27,5 +27,18 @@
 	"dashboard_welcome": "Welcome, {name}!",
 	"dashboard_subtitle": "You are signed in.",
 	"error_generic": "Something went wrong. Please try again.",
-	"error_captcha": "Captcha verification failed. Please try again."
+	"error_captcha": "Captcha verification failed. Please try again.",
+	"nav_admin": "Admin",
+	"forgot_password": "Forgot password?",
+	"forgot_title": "Reset your password",
+	"forgot_subtitle": "Enter your email and we'll send you a reset link.",
+	"forgot_submit": "Send reset link",
+	"forgot_sent": "If that email exists, we've sent a reset link.",
+	"reset_title": "Choose a new password",
+	"reset_subtitle": "Enter and confirm your new password.",
+	"reset_submit": "Update password",
+	"field_password_confirm": "Confirm password",
+	"error_password_short": "Password must be at least 8 characters.",
+	"error_password_match": "Passwords do not match.",
+	"error_reset_token": "This reset link is invalid or has expired."
 }

@@ -2,10 +2,14 @@ import { env } from '$env/dynamic/private';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
-import { magicLink } from 'better-auth/plugins';
+import { magicLink, admin } from 'better-auth/plugins';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
-import { sendMagicLinkEmail } from '$lib/server/email';
+import {
+	sendMagicLinkEmail,
+	sendVerificationEmail,
+	sendPasswordResetEmail
+} from '$lib/server/email';
 import { isProduction } from '$lib/server/env';
 
 /** Origins allowed to start auth flows / receive cookies. */
@@ -63,7 +67,18 @@ export const auth = betterAuth({
 		// Enforce a reasonable password policy server-side.
 		minPasswordLength: 8,
 		maxPasswordLength: 128,
-		requireEmailVerification: false
+		// Require verification only in production (frictionless local dev).
+		requireEmailVerification: isProduction,
+		sendResetPassword: async ({ user, url }) => {
+			await sendPasswordResetEmail(user.email, url);
+		}
+	},
+	emailVerification: {
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true,
+		sendVerificationEmail: async ({ user, url }) => {
+			await sendVerificationEmail(user.email, url);
+		}
 	},
 	socialProviders: socialProviders(),
 	// Harden session cookies. Secure + httpOnly + sameSite=lax by default.
@@ -87,6 +102,15 @@ export const auth = betterAuth({
 		max: 100
 	},
 	plugins: [
+		admin({
+			// User ids listed here always have admin access (comma-separated env).
+			adminUserIds: (env.ADMIN_USER_IDS ?? '')
+				.split(',')
+				.map((id) => id.trim())
+				.filter(Boolean),
+			defaultRole: 'user',
+			adminRoles: ['admin']
+		}),
 		magicLink({
 			sendMagicLink: async ({ email, url }) => {
 				await sendMagicLinkEmail(email, url);
