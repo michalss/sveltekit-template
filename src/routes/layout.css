@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* Enable class-based dark mode: `dark:` variants apply when <html> has .dark */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+	@apply bg-gray-50 text-gray-900;
+}
+
+html.dark {
+	@apply bg-gray-950 text-gray-100;
+	color-scheme: dark;
+}
