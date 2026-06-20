@@ -29,7 +29,7 @@ const factories: Record<AiProviderId, () => AiProvider | null> = {
 					id: 'deepseek',
 					apiKey: env.DEEPSEEK_API_KEY,
 					baseURL: 'https://api.deepseek.com',
-					defaultModel: env.DEEPSEEK_MODEL || 'deepseek-4.1'
+					defaultModel: env.DEEPSEEK_MODEL || 'deepseek-v4-flash'
 				})
 			: null,
 
