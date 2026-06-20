@@ -96,7 +96,13 @@ src/
 
 - **New AI provider**: write a factory in `src/lib/server/ai/` returning an
   `AiProvider`; register it in `ai/index.ts` keyed by its env API key. OpenAI-
-  compatible APIs reuse `openai-compatible.ts`.
+  compatible APIs reuse `openai-compatible.ts`. Current providers: OpenAI,
+  DeepSeek, Gemini, Anthropic. Check the official model lists when updating the
+  default model IDs:
+  - Anthropic: https://platform.claude.com/docs/en/about-claude/models/overview
+  - DeepSeek: https://api-docs.deepseek.com/
+  - OpenAI: https://developers.openai.com/api/docs/models
+  - Gemini: https://ai.google.dev/gemini-api/docs/models
 - **New OAuth provider**: add it in `socialProviders()` in `auth.ts` (only when
   its env vars exist), then `auth:schema` + `db:push`.
 - **New DB table**: add to `src/lib/server/db/schema.ts`, then `db:push`
