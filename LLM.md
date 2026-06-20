@@ -31,7 +31,7 @@ extend each subsystem.
 | Auth       | Better Auth (email+password, magic link, Google, Microsoft, admin/roles, email verify, password reset) |
 | Email      | Pluggable: Resend / SMTP / console (EMAIL_PROVIDER)          |
 | Database   | Drizzle ORM on MariaDB/MySQL (`mysql2`)                       |
-| AI         | OpenAI, Gemini, DeepSeek behind one `AiProvider` interface    |
+| AI         | OpenAI, Gemini, DeepSeek, Anthropic behind one `AiProvider` interface |
 | i18n       | Paraglide (`en`, `cs`)                                       |
 | Captcha    | Cloudflare Turnstile                                         |
 | Markdown   | `marked` + `isomorphic-dompurify`, Shiki, Mermaid            |

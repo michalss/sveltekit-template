@@ -9,7 +9,7 @@ const MAX_CONTENT = 16_000; // chars per message
 const MAX_MESSAGES = 50;
 
 const bodySchema = z.object({
-	provider: z.enum(['openai', 'gemini', 'deepseek']).optional(),
+	provider: z.enum(['openai', 'gemini', 'deepseek', 'anthropic']).optional(),
 	model: z.string().max(100).optional(),
 	stream: z.boolean().optional().default(true),
 	messages: z

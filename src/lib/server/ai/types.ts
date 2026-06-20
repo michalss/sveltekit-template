@@ -23,4 +23,4 @@ export interface AiProvider {
 	stream(messages: AiMessage[], options?: AiCompletionOptions): AsyncIterable<string>;
 }
 
-export type AiProviderId = 'openai' | 'gemini' | 'deepseek';
+export type AiProviderId = 'openai' | 'gemini' | 'deepseek' | 'anthropic';

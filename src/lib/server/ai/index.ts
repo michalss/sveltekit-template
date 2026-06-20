@@ -1,6 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { createOpenAiCompatibleProvider } from './openai-compatible';
 import { createGeminiProvider } from './gemini';
+import { createAnthropicProvider } from './anthropic';
 import type { AiProvider, AiProviderId } from './types';
 
 export type { AiMessage, AiProvider, AiProviderId, AiCompletionOptions } from './types';
@@ -18,7 +19,7 @@ const factories: Record<AiProviderId, () => AiProvider | null> = {
 			? createOpenAiCompatibleProvider({
 					id: 'openai',
 					apiKey: env.OPENAI_API_KEY,
-					defaultModel: env.OPENAI_MODEL || 'gpt-4o-mini'
+					defaultModel: env.OPENAI_MODEL || 'gpt-5.5'
 				})
 			: null,
 
@@ -28,7 +29,7 @@ const factories: Record<AiProviderId, () => AiProvider | null> = {
 					id: 'deepseek',
 					apiKey: env.DEEPSEEK_API_KEY,
 					baseURL: 'https://api.deepseek.com',
-					defaultModel: env.DEEPSEEK_MODEL || 'deepseek-chat'
+					defaultModel: env.DEEPSEEK_MODEL || 'deepseek-4.1'
 				})
 			: null,
 
@@ -36,7 +37,15 @@ const factories: Record<AiProviderId, () => AiProvider | null> = {
 		env.GEMINI_API_KEY
 			? createGeminiProvider({
 					apiKey: env.GEMINI_API_KEY,
-					defaultModel: env.GEMINI_MODEL || 'gemini-1.5-flash'
+					defaultModel: env.GEMINI_MODEL || 'gemini-3.5-flash'
+				})
+			: null,
+
+	anthropic: () =>
+		env.ANTHROPIC_API_KEY
+			? createAnthropicProvider({
+					apiKey: env.ANTHROPIC_API_KEY,
+					defaultModel: env.ANTHROPIC_MODEL || 'claude-opus-4-8'
 				})
 			: null
 };
