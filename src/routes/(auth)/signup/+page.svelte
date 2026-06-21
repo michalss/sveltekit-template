@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Button, Input, Alert } from '$lib/components/ui';
 	import SocialButtons from '$lib/components/auth/SocialButtons.svelte';
+	import AuthDivider from '$lib/components/auth/AuthDivider.svelte';
 	import Turnstile from '$lib/components/Turnstile.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { ActionData } from './$types';
@@ -20,11 +21,7 @@
 
 	<SocialButtons />
 
-	<div class="flex items-center gap-3">
-		<div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
-		<span class="text-xs uppercase tracking-wide text-gray-400">{m.or_continue_with_email()}</span>
-		<div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
-	</div>
+	<AuthDivider />
 
 	{#if form?.message}
 		<Alert variant="error">

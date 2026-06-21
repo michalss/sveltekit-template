@@ -57,6 +57,18 @@ function socialProviders() {
 	return providers;
 }
 
+/**
+ * Which social providers are actually configured (client id/secret present).
+ * Exposed to the client so the UI only renders buttons that will work.
+ */
+export function enabledSocialProviders() {
+	const keys = Object.keys(socialProviders()) as Array<'google' | 'microsoft'>;
+	return {
+		google: keys.includes('google'),
+		microsoft: keys.includes('microsoft')
+	};
+}
+
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,

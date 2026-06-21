@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { signIn } from '$lib/auth-client';
 	import { Button } from '$lib/components/ui';
 	import * as m from '$lib/paraglide/messages';
@@ -8,6 +9,11 @@
 	}
 
 	let { callbackURL = '/dashboard' }: Props = $props();
+
+	// Which providers are configured server-side (from (auth)/+layout.server.ts).
+	const providers = $derived(
+		page.data.socialProviders ?? { google: false, microsoft: false }
+	);
 
 	let loading = $state<string | null>(null);
 
@@ -21,7 +27,9 @@
 	}
 </script>
 
+{#if providers.google || providers.microsoft}
 <div class="flex flex-col gap-3">
+	{#if providers.google}
 	<Button
 		type="button"
 		variant="outline"
@@ -49,7 +57,9 @@
 		</svg>
 		{m.continue_with_google()}
 	</Button>
+	{/if}
 
+	{#if providers.microsoft}
 	<Button
 		type="button"
 		variant="outline"
@@ -65,4 +75,6 @@
 		</svg>
 		{m.continue_with_microsoft()}
 	</Button>
+	{/if}
 </div>
+{/if}
