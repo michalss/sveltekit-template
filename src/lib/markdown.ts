@@ -18,7 +18,14 @@ const renderer = new marked.Renderer();
 // Custom code renderer: keep the raw source in a data attribute (base64 to
 // survive sanitization untouched) so the client can highlight/diagram it.
 renderer.code = ({ text, lang }: Tokens.Code): string => {
-	const language = (lang ?? '').trim().toLowerCase();
+	// Restrict the language to a safe charset. The fence info string is fully
+	// attacker-controlled and is later reinjected into the DOM by the client
+	// renderer, so anything outside this allowlist would be an XSS vector.
+	const language = (lang ?? '')
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9+#._-]/g, '')
+		.slice(0, 30);
 	const encoded = encodeBase64(text);
 
 	if (language === 'mermaid') {

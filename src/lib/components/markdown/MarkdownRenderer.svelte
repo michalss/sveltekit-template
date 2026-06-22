@@ -65,9 +65,13 @@
 
 	function wrapCodeBlock(highlighted: string, lang: string, raw: string): string {
 		const encoded = encodeURIComponent(raw);
+		// `lang` comes from pre.dataset.lang (the markdown fence info string) and is
+		// interpolated into outerHTML below — restrict it to a safe charset so it
+		// can never break out into live markup (XSS), even client-side.
+		const safeLang = lang.replace(/[^a-zA-Z0-9+#._-]/g, '').slice(0, 30) || 'text';
 		return `<div class="code-block group relative" data-raw="${encoded}">
 			<button type="button" class="code-copy" aria-label="Copy code">Copy</button>
-			<span class="code-lang">${lang}</span>
+			<span class="code-lang">${safeLang}</span>
 			${highlighted}
 		</div>`;
 	}

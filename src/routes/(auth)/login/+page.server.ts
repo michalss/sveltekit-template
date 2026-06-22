@@ -27,8 +27,10 @@ export const actions: Actions = {
 		try {
 			await auth.api.signInEmail({ body: { email, password }, headers: event.request.headers });
 		} catch (error) {
+			// Single generic message for all sign-in failures (invalid credentials,
+			// unverified email, …) so backend state cannot be probed via the response.
 			if (error instanceof APIError) {
-				return fail(400, { message: error.message || 'error_generic', email });
+				return fail(400, { message: 'error_generic', email });
 			}
 			return fail(500, { message: 'error_generic', email });
 		}
@@ -52,11 +54,9 @@ export const actions: Actions = {
 				body: { email, callbackURL: '/dashboard' },
 				headers: event.request.headers
 			});
-		} catch (error) {
-			if (error instanceof APIError) {
-				return fail(400, { message: error.message || 'error_generic', email });
-			}
-			return fail(500, { message: 'error_generic', email });
+		} catch {
+			// Swallow errors and always report "sent" so the magic-link form cannot
+			// be used to tell whether an email is registered (mirrors forgot-password).
 		}
 
 		return { magicSent: true, email };

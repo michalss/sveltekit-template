@@ -38,6 +38,10 @@ const handleRateLimit: Handle = async ({ event, resolve }) => {
 		event.request.method === 'POST' && SENSITIVE_FORMS.some((p) => path.endsWith(p));
 
 	if (isAuthPost || isFormPost) {
+		// NOTE: getClientAddress() trusts X-Forwarded-For when running behind a
+		// reverse proxy (adapter-node ADDRESS_HEADER / xff_depth). In production
+		// configure a fixed trusted-proxy hop count so a spoofed XFF can't mint a
+		// fresh rate-limit bucket per request. See LLM.md / adapter-node docs.
 		const ip = event.getClientAddress();
 		const result = rateLimit({ key: `auth:${ip}`, limit: 10, windowMs: 60_000 });
 		if (!result.success) {

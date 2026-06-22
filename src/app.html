@@ -11,20 +11,9 @@
 
 		<meta name="text-scale" content="scale" />
 
-		<!-- Apply the theme before first paint to avoid a flash of the wrong theme. -->
-		<script>
-			(() => {
-				try {
-					const stored = localStorage.getItem('theme');
-					const dark =
-						stored === 'dark' ||
-						(!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
-					document.documentElement.classList.toggle('dark', dark);
-				} catch {
-					/* ignore */
-				}
-			})();
-		</script>
+		<!-- Apply the theme before first paint to avoid a flash of the wrong theme.
+		     External file so the CSP needs no 'unsafe-inline' for scripts. -->
+		<script src="%sveltekit.assets%/theme-init.js"></script>
 		%sveltekit.head%
 	</head>
 

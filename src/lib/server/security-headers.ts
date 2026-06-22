@@ -2,36 +2,17 @@ import type { Handle } from '@sveltejs/kit';
 import { isProduction } from '$lib/server/env';
 
 /**
- * Applies security response headers, including a Content-Security-Policy tuned
- * for this template (allows Cloudflare Turnstile, blocks everything else).
+ * Applies security response headers.
  *
- * Note: SvelteKit can also manage CSP via svelte.config.js with per-render
- * nonces/hashes. This header-based approach is simpler and covers all responses
- * (including API routes); tighten `script-src` further if you remove Turnstile.
+ * The Content-Security-Policy itself is configured in svelte.config.js via
+ * `kit.csp`, so SvelteKit can add per-render nonces/hashes for its inline
+ * scripts and we can avoid 'unsafe-inline' in script-src. This handle adds the
+ * remaining hardening headers that CSP does not cover.
  */
-
-const TURNSTILE = 'https://challenges.cloudflare.com';
-
-const csp = [
-	`default-src 'self'`,
-	// 'unsafe-inline' is needed for the anti-FOUC theme script and Svelte styles.
-	`script-src 'self' 'unsafe-inline' ${TURNSTILE}`,
-	`style-src 'self' 'unsafe-inline'`,
-	`img-src 'self' data: https:`,
-	`font-src 'self' data:`,
-	`frame-src ${TURNSTILE}`,
-	`connect-src 'self' ${TURNSTILE}`,
-	`object-src 'none'`,
-	`base-uri 'self'`,
-	`form-action 'self'`,
-	`frame-ancestors 'none'`,
-	...(isProduction ? ['upgrade-insecure-requests'] : [])
-].join('; ');
 
 export const handleSecurityHeaders: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 
-	response.headers.set('Content-Security-Policy', csp);
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

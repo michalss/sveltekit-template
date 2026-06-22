@@ -12,10 +12,13 @@ const bodySchema = z.object({
 	provider: z.enum(['openai', 'gemini', 'deepseek', 'anthropic']).optional(),
 	model: z.string().max(100).optional(),
 	stream: z.boolean().optional().default(true),
+	// Only user/assistant turns are accepted from the client. A client-supplied
+	// `system` role would let any user override the app's system prompt / jailbreak
+	// the model on the app's API key — prepend system prompts server-side instead.
 	messages: z
 		.array(
 			z.object({
-				role: z.enum(['system', 'user', 'assistant']),
+				role: z.enum(['user', 'assistant']),
 				content: z.string().min(1).max(MAX_CONTENT)
 			})
 		)

@@ -44,7 +44,8 @@ export const actions: Actions = {
 		try {
 			await auth.api.setRole({ body: { userId, role }, headers: event.request.headers });
 		} catch (error) {
-			if (error instanceof APIError) return fail(400, { message: error.message });
+			// Don't echo raw Better Auth messages (leaks internals / user state).
+			if (error instanceof APIError) return fail(400, { message: 'Failed to update role' });
 			return fail(500, { message: 'Failed to update role' });
 		}
 		return { success: true };
@@ -74,7 +75,7 @@ export const actions: Actions = {
 		try {
 			await auth.api.banUser({ body: { userId }, headers: event.request.headers });
 		} catch (error) {
-			if (error instanceof APIError) return fail(400, { message: error.message });
+			if (error instanceof APIError) return fail(400, { message: 'Failed to ban user' });
 			return fail(500, { message: 'Failed to ban user' });
 		}
 		return { success: true };
@@ -88,7 +89,7 @@ export const actions: Actions = {
 		try {
 			await auth.api.unbanUser({ body: { userId }, headers: event.request.headers });
 		} catch (error) {
-			if (error instanceof APIError) return fail(400, { message: error.message });
+			if (error instanceof APIError) return fail(400, { message: 'Failed to unban user' });
 			return fail(500, { message: 'Failed to unban user' });
 		}
 		return { success: true };

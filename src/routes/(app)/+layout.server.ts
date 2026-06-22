@@ -1,9 +1,9 @@
-import { redirect } from '@sveltejs/kit';
+import { requireUser } from '$lib/server/authorize';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = (event) => {
-	if (!event.locals.user) {
-		redirect(302, '/login');
-	}
-	return { user: event.locals.user };
+	// requireUser also rejects banned users (treated as unauthenticated),
+	// guarding every route in the (app) group consistently.
+	const user = requireUser(event);
+	return { user };
 };

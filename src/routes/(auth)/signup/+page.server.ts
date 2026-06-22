@@ -31,8 +31,10 @@ export const actions: Actions = {
 				headers: event.request.headers
 			});
 		} catch (error) {
+			// Return a generic message regardless of the cause (e.g. duplicate
+			// email) so signup cannot be used to enumerate registered accounts.
 			if (error instanceof APIError) {
-				return fail(400, { message: error.message || 'error_generic', name, email });
+				return fail(400, { message: 'error_generic', name, email });
 			}
 			return fail(500, { message: 'error_generic', name, email });
 		}
