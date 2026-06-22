@@ -105,7 +105,11 @@ export const auth = betterAuth({
 	session: {
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
 		updateAge: 60 * 60 * 24, // refresh once per day
-		cookieCache: { enabled: true, maxAge: 5 * 60 }
+		// The cookie cache trusts the signed session cookie (incl. role/banned)
+		// without a DB read for this window — so a ban/demote only takes effect
+		// once it expires. Keep it short so revocation is near-immediate; raise it
+		// only if you re-check the live user on privilege/ban-sensitive paths.
+		cookieCache: { enabled: true, maxAge: 30 }
 	},
 	rateLimit: {
 		// Better Auth's own per-endpoint limiter (defense in depth alongside ours).

@@ -87,6 +87,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	await mkdir(UPLOAD_DIR, { recursive: true });
 	await writeFile(join(UPLOAD_DIR, name), bytes);
 
+	// Report the sniffed type, never the spoofable client-supplied file.type.
+	const SNIFFED_MIME: Record<string, string> = {
+		png: 'image/png',
+		jpg: 'image/jpeg',
+		gif: 'image/gif',
+		webp: 'image/webp'
+	};
+
 	const url = `/uploads/${name}`;
-	return json({ url, name, size: file.size, type: file.type });
+	return json({ url, name, size: file.size, type: SNIFFED_MIME[ext] });
 };

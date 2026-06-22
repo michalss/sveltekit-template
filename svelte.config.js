@@ -26,7 +26,9 @@ const config = {
 				'default-src': ['self'],
 				'script-src': ['self', 'https://challenges.cloudflare.com'],
 				'style-src': ['self', 'unsafe-inline'],
-				'img-src': ['self', 'data:', 'https:'],
+				// Uploads are same-origin; no bare https: wildcard so stored markdown
+				// can't beacon arbitrary third-party hosts via embedded <img>.
+				'img-src': ['self', 'data:'],
 				'font-src': ['self', 'data:'],
 				'frame-src': ['https://challenges.cloudflare.com'],
 				'connect-src': ['self', 'https://challenges.cloudflare.com'],

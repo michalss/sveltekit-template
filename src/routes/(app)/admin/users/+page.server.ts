@@ -48,6 +48,16 @@ export const actions: Actions = {
 			if (error instanceof APIError) return fail(400, { message: 'Failed to update role' });
 			return fail(500, { message: 'Failed to update role' });
 		}
+
+		// Re-check AFTER the write: the pre-check and the mutation aren't atomic,
+		// so two concurrent demotions could each pass the guard and lock everyone
+		// out. If we just dropped below the invariant, undo this demotion.
+		if (role !== 'admin' && (await activeAdminCount(event)) < 1) {
+			await auth.api
+				.setRole({ body: { userId, role: 'admin' }, headers: event.request.headers })
+				.catch(() => {});
+			return fail(400, { message: 'There must be at least one admin.' });
+		}
 		return { success: true };
 	},
 
@@ -77,6 +87,15 @@ export const actions: Actions = {
 		} catch (error) {
 			if (error instanceof APIError) return fail(400, { message: 'Failed to ban user' });
 			return fail(500, { message: 'Failed to ban user' });
+		}
+
+		// Re-check AFTER the write (the guard above is not atomic with the ban):
+		// if banning this admin emptied the active-admin set, undo it.
+		if (target?.role === 'admin' && (await activeAdminCount(event)) < 1) {
+			await auth.api
+				.unbanUser({ body: { userId }, headers: event.request.headers })
+				.catch(() => {});
+			return fail(400, { message: 'You cannot ban the last admin.' });
 		}
 		return { success: true };
 	},

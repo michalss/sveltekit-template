@@ -38,9 +38,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		throw error(429, `Rate limit exceeded. Try again in ${retryAfterSeconds(limit.resetAt)}s.`);
 	}
 
-	// Reject oversized bodies before parsing JSON.
-	const contentLength = Number(request.headers.get('content-length') ?? 0);
-	if (contentLength > 1_000_000) {
+	// Reject oversized bodies before parsing JSON. A missing or non-numeric
+	// Content-Length (e.g. chunked transfer) would bypass a simple `> max` check,
+	// so require a valid, in-range header up front.
+	const MAX_BODY = 1_000_000;
+	const rawLen = request.headers.get('content-length');
+	const contentLength = Number(rawLen);
+	if (rawLen === null || !Number.isFinite(contentLength) || contentLength > MAX_BODY) {
 		throw error(413, 'Payload too large');
 	}
 
